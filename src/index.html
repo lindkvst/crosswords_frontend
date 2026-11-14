@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crosswords</title>
+    <link rel="stylesheet" href="css/stylesheet.css">
+</head>
+<body>
+<header>
+    <a class="logo" href="index.html">Crosswords</a>
+</header>
+<main>
+    <section>
+        <h1>Krydsord, du selv kan løse. Indtil videre.</h1>
+        <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Snart kan du lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
+    </section>
+
+    <section>
+        <h2>Vælg krydsord</h2>
+        <button id="new-crossword" type="button">Hent nyt krydsord</button>
+        <p class="hint">Et nyt krydsord bruger 1 af 30 månedlige udfyldninger hos krydsords-API'et. Gemte krydsord er gratis.</p>
+        <ul id="crossword-list" class="crossword-list"></ul>
+    </section>
+
+    <section id="puzzle" hidden>
+        <h2 id="puzzle-title"></h2>
+        <div class="puzzle-layout">
+            <div id="grid" class="grid"></div>
+            <div class="clues">
+                <h3>Vandret</h3>
+                <ul id="clues-across"></ul>
+                <h3>Lodret</h3>
+                <ul id="clues-down"></ul>
+            </div>
+        </div>
+        <button id="submit" type="button">Tjek løsning</button>
+        <p id="result" class="result" role="status"></p>
+
+        <h3>Afleveringer</h3>
+        <ul id="submission-list"></ul>
+    </section>
+
+    <p id="status" class="status" role="status"></p>
+</main>
+<script type="module" src="js/index.js"></script>
+</body>
+</html>

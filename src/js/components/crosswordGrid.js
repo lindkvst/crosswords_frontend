@@ -41,6 +41,17 @@ export function markGrid(container, cellMarks) {
     }
 }
 
+// Writes a grid of letters into the inputs, e.g. Claude's answer. '.' becomes an empty cell.
+export function fillGrid(container, letterGrid) {
+    for (const cell of container.children) {
+        const input = cell.querySelector("input");
+        if (input) {
+            const letter = letterGrid[cell.dataset.row][cell.dataset.col];
+            input.value = letter === "." ? "" : letter.toUpperCase();
+        }
+    }
+}
+
 // A clue knows where its word starts, so the clues tell us which cells get a number.
 function startNumbers(clues) {
     const numbers = new Map();

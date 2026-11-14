@@ -13,7 +13,7 @@
 <main>
     <section>
         <h1>Krydsord, du selv kan løse. Indtil videre.</h1>
-        <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Snart kan du lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
+        <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Du kan også lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
     </section>
 
     <section>
@@ -34,7 +34,17 @@
                 <ul id="clues-down"></ul>
             </div>
         </div>
-        <button id="submit" type="button">Tjek løsning</button>
+        <div class="actions">
+            <button id="submit" type="button">Tjek løsning</button>
+            <label class="model-label" for="claude-model">Model</label>
+            <select id="claude-model">
+                <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
+                <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
+                <option value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kan tage minutter</option>
+            </select>
+            <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
+        </div>
+        <p class="hint">Claude får det tomme gitter og ledetrådene, aldrig facit. Claudes bogstaver vises i gitteret bagefter.</p>
         <p id="result" class="result" role="status"></p>
 
         <h3>Afleveringer</h3>

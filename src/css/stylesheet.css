@@ -63,6 +63,29 @@ button {
 
 button:disabled { opacity: 0.5; cursor: wait; }
 
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.actions { align-items: center; flex-wrap: wrap; }
+
+.model-label { margin-left: 1rem; color: var(--muted); }
+
+select {
+    padding: 0.45rem;
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 0.25rem;
+    background: white;
+}
+
+button.secondary {
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+}
+
 .crossword-list {
     display: flex;
     flex-wrap: wrap;

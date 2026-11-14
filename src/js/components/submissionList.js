@@ -1,3 +1,5 @@
+import { MODEL_NAMES } from "../models.js";
+
 export function renderSubmissions(container, submissions) {
     if (submissions.length === 0) {
         const empty = document.createElement("li");
@@ -9,7 +11,8 @@ export function renderSubmissions(container, submissions) {
 }
 
 function createItem(submission) {
-    const who = submission.llmAssisted ? "Claude" : "Spiller";
+    // llmModel is null when a player solved it.
+    const who = submission.llmModel ? MODEL_NAMES[submission.llmModel] : "Spiller";
     const seconds = Math.round(submission.timeToSolveMs / 1000);
 
     const item = document.createElement("li");

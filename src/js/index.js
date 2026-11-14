@@ -1,8 +1,9 @@
-import { fetchCrosswords, createCrossword, fetchSubmissions, postSubmission } from "./api/crosswordApi.js";
+import { fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission } from "./api/crosswordApi.js";
 import { renderCrosswordList, markSelected } from "./components/crosswordList.js";
-import { renderGrid, readGrid, markGrid } from "./components/crosswordGrid.js";
+import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crosswordGrid.js";
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
+import { MODEL_NAMES } from "./models.js";
 
 const newButton = document.querySelector("#new-crossword");
 const crosswordList = document.querySelector("#crossword-list");
@@ -12,6 +13,8 @@ const grid = document.querySelector("#grid");
 const cluesAcross = document.querySelector("#clues-across");
 const cluesDown = document.querySelector("#clues-down");
 const submitButton = document.querySelector("#submit");
+const claudeButton = document.querySelector("#claude-solve");
+const modelSelect = document.querySelector("#claude-model");
 const result = document.querySelector("#result");
 const submissionList = document.querySelector("#submission-list");
 const status = document.querySelector("#status");
@@ -22,6 +25,7 @@ let startedAt = 0;
 
 newButton.addEventListener("click", onNewCrossword);
 submitButton.addEventListener("click", onSubmit);
+claudeButton.addEventListener("click", onClaudeSolve);
 init();
 
 async function init() {
@@ -95,4 +99,29 @@ async function onSubmit() {
     } catch (error) {
         result.textContent = `Kunne ikke aflevere: ${error.message}`;
     }
+}
+
+async function onClaudeSolve() {
+    // The buttons are disabled while Claude works, so the player cannot submit half-way.
+    const model = modelSelect.value;
+    setClaudeBusy(true);
+    result.textContent = `${MODEL_NAMES[model]} løser krydsordet. Det kan tage fra sekunder til et par minutter.`;
+    try {
+        const { submission, submittedGrid, cellMarks } = await postClaudeSubmission(currentCrossword.id, model);
+        fillGrid(grid, submittedGrid);
+        markGrid(grid, cellMarks);
+        const seconds = Math.round(submission.timeToSolveMs / 1000);
+        result.textContent = `${MODEL_NAMES[submission.llmModel]} fik ${submission.percentCorrect} % rigtige på ${seconds} sekunder.`;
+        await showSubmissions();
+    } catch (error) {
+        result.textContent = `Claude kunne ikke løse krydsordet: ${error.message}`;
+    } finally {
+        setClaudeBusy(false);
+    }
+}
+
+function setClaudeBusy(busy) {
+    claudeButton.disabled = busy;
+    submitButton.disabled = busy;
+    modelSelect.disabled = busy;
 }

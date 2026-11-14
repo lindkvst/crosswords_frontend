@@ -20,6 +20,10 @@ export function postSubmission(crosswordId, submission) {
     });
 }
 
+export function postClaudeSubmission(crosswordId, model) {
+    return request(`/api/crosswords/${crosswordId}/submissions/claude?model=${encodeURIComponent(model)}`, { method: "POST" });
+}
+
 // One place for every call, so errors are handled the same way everywhere.
 // The backend answers errors with an ErrorMessage that has a "message" field.
 async function request(path, options) {

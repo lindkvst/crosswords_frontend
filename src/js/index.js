@@ -1,6 +1,6 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
-    registerUser, fetchMe, setUnauthorizedHandler, fetchGridTemplates,
+    registerUser, fetchMe, setUnauthorizedHandler, fetchGridTemplates, fetchApiCalls,
 } from "./api/crosswordApi.js";
 import { setCredentials, clearCredentials } from "./auth.js";
 import { initAuthForms } from "./components/authForms.js";
@@ -9,6 +9,7 @@ import { renderTemplateOptions } from "./components/templateSelect.js";
 import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crosswordGrid.js";
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
+import { renderResourceRows } from "./components/resourceTable.js";
 import { MODEL_NAMES } from "./models.js";
 
 const authSection = document.querySelector("#auth");
@@ -36,6 +37,7 @@ const modelSelect = document.querySelector("#claude-model");
 const result = document.querySelector("#result");
 const submissionsSection = document.querySelector("#submissions");
 const submissionList = document.querySelector("#submission-list");
+const resourceRows = document.querySelector("#resource-rows");
 const status = document.querySelector("#status");
 
 // The crossword on screen, and when it was shown. Used to measure the time to solve.
@@ -132,9 +134,15 @@ async function showCrossword(crossword) {
     await showSubmissions();
 }
 
+// Submissions and resource usage are fetched together, because the table also shows the players' time.
 async function showSubmissions() {
     try {
-        renderSubmissions(submissionList, await fetchSubmissions(currentCrossword.id));
+        const [submissions, apiCalls] = await Promise.all([
+            fetchSubmissions(currentCrossword.id),
+            fetchApiCalls(currentCrossword.id),
+        ]);
+        renderSubmissions(submissionList, submissions);
+        renderResourceRows(resourceRows, apiCalls, submissions);
     } catch (error) {
         status.textContent = `Kunne ikke hente afleveringer: ${error.message}`;
     }

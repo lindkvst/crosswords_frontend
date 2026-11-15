@@ -1,4 +1,5 @@
 import { MODEL_NAMES } from "../models.js";
+import { formatWh } from "../energy.js";
 
 export function renderSubmissions(container, submissions) {
     if (submissions.length === 0) {
@@ -17,6 +18,6 @@ function createItem(submission) {
     const seconds = Math.round(submission.timeToSolveMs / 1000);
 
     const item = document.createElement("li");
-    item.textContent = `${who}: ${submission.percentCorrect} % rigtige på ${seconds} sekunder`;
+    item.textContent = `${who}: ${submission.percentCorrect} % rigtige på ${seconds} sekunder (≈ ${formatWh(submission.estimatedWh)})`;
     return item;
 }

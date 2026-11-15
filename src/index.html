@@ -96,6 +96,16 @@
         <section id="submissions" class="panel" hidden>
             <h2>Afleveringer</h2>
             <ul id="submission-list" class="submission-list"></ul>
+
+            <h3>Ressourceforbrug</h3>
+            <table class="resource-table">
+                <thead>
+                <tr><th>Kald</th><th>Tid</th><th>Tokens ind/ud</th><th>Energi</th></tr>
+                </thead>
+                <tbody id="resource-rows"></tbody>
+            </table>
+            <p class="hint">Energien er et groft estimat: watt × tid. Hjernen regnes til 20 W, en texs-server til 50 W
+                og Claude til 300–1400 W afhængigt af modellen. Tid og tokens er målt, watt er antaget.</p>
         </section>
     </div>
 </main>

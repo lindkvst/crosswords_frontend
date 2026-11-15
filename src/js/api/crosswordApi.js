@@ -37,6 +37,10 @@ export function createCrossword(crosswordRequest) {
     });
 }
 
+export function fetchApiCalls(crosswordId) {
+    return request(`/api/crosswords/${crosswordId}/api-calls`);
+}
+
 export function fetchSubmissions(crosswordId) {
     return request(`/api/crosswords/${crosswordId}/submissions`);
 }

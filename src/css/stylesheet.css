@@ -181,3 +181,20 @@ button.secondary {
 }
 
 .submission-list { margin: 0; padding-left: 1.25rem; }
+
+/* ------ RESOURCES ------ */
+
+.resource-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.resource-table th, .resource-table td {
+    padding: 0.35rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--soft-line);
+}
+
+/* Numbers line up when they are right-aligned. */
+.resource-table td:not(:first-child), .resource-table th:not(:first-child) { text-align: right; }

@@ -1,9 +1,9 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
-    registerUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
+    registerUser, loginUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
     fetchAdminUsers, fetchAdminUsage,
 } from "./api/crosswordApi.js";
-import { setCredentials, clearCredentials } from "./auth.js";
+import { setToken, clearToken, getAuthHeader } from "./auth.js";
 import { initAuthForms } from "./components/authForms.js";
 import { renderCrosswordList, markSelected, sizeLabel } from "./components/crosswordList.js";
 import { renderSizeOptions } from "./components/sizeSelect.js";
@@ -65,6 +65,7 @@ setUnauthorizedHandler(() => {
     authStatus.textContent = "Log ind for at fortsætte.";
 });
 initRouter({ canShow, onShow: onPageShown });
+resumeLogin();
 
 // Home and Kontakt are open to everyone. Only a convenience: the backend answers 401/403 anyway.
 function canShow(page) {
@@ -86,9 +87,10 @@ function onPageShown(page) {
 }
 
 async function onLogin(username, password) {
-    setCredentials(username, password);
     try {
-        // /me is the cheapest call that needs login, so it checks the password.
+        const { token } = await loginUser(username, password);
+        setToken(token);
+        // The token says who the user is, but /me gives the role and email from the database.
         const user = await fetchMe();
         loginForm.reset();
         await showApp(user);
@@ -108,7 +110,7 @@ async function onRegister(user) {
 }
 
 function showLogin() {
-    clearCredentials();
+    clearToken();
     currentUser = null;
     userInfo.hidden = true;
     navStats.hidden = true;
@@ -117,7 +119,8 @@ function showLogin() {
     goTo("home");
 }
 
-async function showApp(user) {
+// startPage is "spil" after a login. After a reload it is the page the user was on.
+async function showApp(user, startPage = "spil") {
     currentUser = user;
     authStatus.textContent = "";
     authSection.hidden = true;
@@ -132,7 +135,20 @@ async function showApp(user) {
     }
     navStats.hidden = !isAdmin;
     await loadApp();
-    goTo("spil");
+    goTo(startPage);
+}
+
+// After a reload the token is still in sessionStorage, so the user stays logged in until the tab is closed
+// or the token expires (then /me answers 401, and the login form is shown).
+async function resumeLogin() {
+    if (!getAuthHeader()) {
+        return;
+    }
+    try {
+        await showApp(await fetchMe(), location.hash.slice(1) || "spil");
+    } catch {
+        // The 401 handler has already shown the login form.
+    }
 }
 
 async function loadAdmin() {

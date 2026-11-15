@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../config.js";
-import { getAuthHeader, clearCredentials } from "../auth.js";
+import { getAuthHeader, clearToken, basicHeader } from "../auth.js";
 
 // Set by index.js. Called when the backend answers 401, so the login form can be shown.
 let onUnauthorized = () => {};
@@ -13,6 +13,14 @@ export function registerUser(user) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
+    });
+}
+
+// The only call with the password. The answer is { token, expiresAt }, and the token is used from then on.
+export function loginUser(username, password) {
+    return request("/api/auth/login", {
+        method: "POST",
+        headers: { Authorization: basicHeader(username, password) },
     });
 }
 
@@ -74,15 +82,16 @@ export function postClaudeSubmission(crosswordId, model) {
 // The backend answers errors with an ErrorMessage that has a "message" field.
 async function request(path, options = {}) {
     const headers = { ...options.headers };
+    // The login call brings its own Basic header. Every other call sends the token.
     const authHeader = getAuthHeader();
-    if (authHeader) {
+    if (authHeader && !headers.Authorization) {
         headers.Authorization = authHeader;
     }
 
     const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
     if (res.status === 401) {
-        // Wrong password, or not logged in: forget the credentials and ask again.
-        clearCredentials();
+        // Wrong password, expired token or not logged in: forget the token and ask again.
+        clearToken();
         onUnauthorized();
         throw new Error("Forkert brugernavn eller adgangskode, eller du er ikke logget ind");
     }

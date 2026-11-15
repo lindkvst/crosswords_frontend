@@ -41,13 +41,7 @@
                 <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
                 <button type="submit">Log ind</button>
             </form>
-            <form id="register-form" class="stacked-form">
-                <h2>Opret bruger</h2>
-                <label>Brugernavn <input name="username" autocomplete="username" required></label>
-                <label>Email <input name="email" type="email" autocomplete="email" required></label>
-                <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
-                <button type="submit">Opret bruger</button>
-            </form>
+            <p class="hint">Ny her? <a href="#opret">Opret en bruger</a>.</p>
             <p class="hint">Du forbliver logget ind, til du logger ud, lukker fanen, eller der er gået en time.</p>
             <p id="auth-status" class="status" role="status"></p>
         </section>
@@ -55,6 +49,20 @@
         <section id="welcome" class="panel" hidden>
             <h2>Du er logget ind</h2>
             <p><a href="#spil">Gå til spillet</a> for at lave et krydsord, løse det og lade Claude prøve.</p>
+        </section>
+    </div>
+
+    <div data-page="opret" hidden>
+        <section class="panel">
+            <form id="register-form" class="stacked-form">
+                <h2>Opret bruger</h2>
+                <label>Brugernavn <input name="username" autocomplete="username" required></label>
+                <label>Email <input name="email" type="email" autocomplete="email" required></label>
+                <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
+                <button type="submit">Opret bruger</button>
+            </form>
+            <p class="hint">Du bliver logget ind med det samme. Har du allerede en bruger? <a href="#home">Log ind</a>.</p>
+            <p id="register-status" class="status" role="status"></p>
         </section>
     </div>
 

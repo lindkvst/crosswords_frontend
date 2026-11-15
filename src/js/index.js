@@ -19,6 +19,7 @@ const authSection = document.querySelector("#auth");
 const authStatus = document.querySelector("#auth-status");
 const loginForm = document.querySelector("#login-form");
 const registerForm = document.querySelector("#register-form");
+const registerStatus = document.querySelector("#register-status");
 const welcome = document.querySelector("#welcome");
 const navStats = document.querySelector("#nav-stats");
 const userInfo = document.querySelector("#user-info");
@@ -67,8 +68,12 @@ setUnauthorizedHandler(() => {
 initRouter({ canShow, onShow: onPageShown });
 resumeLogin();
 
-// Home and Kontakt are open to everyone. Only a convenience: the backend answers 401/403 anyway.
+// Home and Kontakt are open to everyone, Opret only when logged out.
+// Only a convenience: the backend answers 401/403 anyway.
 function canShow(page) {
+    if (page === "opret") {
+        return !currentUser;
+    }
     if (page === "spil" && !currentUser) {
         authStatus.textContent = "Log ind for at spille.";
         return false;
@@ -103,9 +108,10 @@ async function onRegister(user) {
     try {
         await registerUser(user);
         registerForm.reset();
+        registerStatus.textContent = "";
         await onLogin(user.username, user.password);
     } catch (error) {
-        authStatus.textContent = `Kunne ikke oprette bruger: ${error.message}`;
+        registerStatus.textContent = `Kunne ikke oprette bruger: ${error.message}`;
     }
 }
 

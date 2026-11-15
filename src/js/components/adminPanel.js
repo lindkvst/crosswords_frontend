@@ -13,6 +13,31 @@ export function renderUsers(list, users) {
     }));
 }
 
+// One row per role, one column per permission, ✓ where the role has it. Read from the database, so roles added
+// with SQL show up too.
+export function renderRoleMatrix(table, { permissions, roles }) {
+    const header = document.createElement("tr");
+    header.append(cell("th", "Rolle"), ...permissions.map(p => {
+        const th = cell("th", p.name);
+        th.title = p.description;
+        return th;
+    }));
+    const rows = roles.map(role => {
+        const row = document.createElement("tr");
+        const name = cell("th", role.name);
+        name.title = role.description ?? "";
+        row.append(name, ...permissions.map(p => cell("td", role.permissions.includes(p.name) ? "✓" : "–")));
+        return row;
+    });
+    table.replaceChildren(header, ...rows);
+}
+
+function cell(tag, text) {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    return element;
+}
+
 function createUsageRow(summary) {
     const row = document.createElement("tr");
     // The token sums are null for texs, which has no tokens.

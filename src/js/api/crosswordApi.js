@@ -32,6 +32,11 @@ export function fetchAdminUsers() {
     return request("/api/admin/users");
 }
 
+// { permissions: [{ name, description }], roles: [{ name, description, permissions: [...] }] }
+export function fetchAdminRoles() {
+    return request("/api/admin/roles");
+}
+
 export function fetchAdminUsage() {
     return request("/api/admin/usage");
 }

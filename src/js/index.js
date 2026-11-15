@@ -1,7 +1,7 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission, startAttempt,
     registerUser, loginUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
-    fetchAdminUsers, fetchAdminUsage,
+    fetchAdminUsers, fetchAdminUsage, fetchAdminRoles,
 } from "./api/crosswordApi.js";
 import { setToken, clearToken, getAuthHeader } from "./auth.js";
 import { initAuthForms } from "./components/authForms.js";
@@ -11,7 +11,7 @@ import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crossword
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
 import { renderResourceRows } from "./components/resourceTable.js";
-import { renderUsage, renderUsers } from "./components/adminPanel.js";
+import { renderUsage, renderUsers, renderRoleMatrix } from "./components/adminPanel.js";
 import { MODEL_NAMES } from "./models.js";
 import { initRouter, goTo } from "./router.js";
 
@@ -46,6 +46,7 @@ const resourceRows = document.querySelector("#resource-rows");
 const adminModelOption = document.querySelector("#admin-model");
 const adminUsage = document.querySelector("#admin-usage");
 const adminUsers = document.querySelector("#admin-users");
+const roleMatrix = document.querySelector("#role-matrix");
 const adminStatus = document.querySelector("#admin-status");
 const status = document.querySelector("#status");
 
@@ -80,7 +81,7 @@ function canShow(page) {
         return false;
     }
     if (page === "stats") {
-        return currentUser?.role === "ADMIN";
+        return can("VIEW_STATS");
     }
     return true;
 }
@@ -134,13 +135,13 @@ async function showApp(user, startPage = "spil") {
     userName.textContent = `Logget ind som ${user.username}`;
     userInfo.hidden = false;
     welcome.hidden = false;
-    // Only a convenience: the backend refuses these for a player anyway.
-    const isAdmin = user.role === "ADMIN";
-    adminModelOption.disabled = !isAdmin;
-    if (!isAdmin && modelSelect.value === adminModelOption.value) {
+    // Only a convenience: the backend checks the same permissions on every request anyway.
+    const canUsePremium = can("USE_PREMIUM_MODEL");
+    adminModelOption.disabled = !canUsePremium;
+    if (!canUsePremium && modelSelect.value === adminModelOption.value) {
         modelSelect.value = "CHEAP_AND_DUMB";
     }
-    navStats.hidden = !isAdmin;
+    navStats.hidden = !can("VIEW_STATS");
     await loadApp();
     goTo(startPage);
 }
@@ -158,11 +159,17 @@ async function resumeLogin() {
     }
 }
 
+// The frontend asks about permissions, never role names, like the backend (see the role matrix).
+function can(permission) {
+    return currentUser?.permissions?.includes(permission) ?? false;
+}
+
 async function loadAdmin() {
     try {
-        const [usage, users] = await Promise.all([fetchAdminUsage(), fetchAdminUsers()]);
+        const [usage, users, matrix] = await Promise.all([fetchAdminUsage(), fetchAdminUsers(), fetchAdminRoles()]);
         renderUsage(adminUsage, usage);
         renderUsers(adminUsers, users);
+        renderRoleMatrix(roleMatrix, matrix);
     } catch (error) {
         adminStatus.textContent = `Kunne ikke hente admin-data: ${error.message}`;
     }

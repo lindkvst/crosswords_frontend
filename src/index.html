@@ -48,14 +48,15 @@
             <h2>Nyt krydsord</h2>
             <form id="create-form" class="stacked-form">
                 <label>Gitterstørrelse
-                    <select id="grid-template" name="gridTemplateId" required></select>
+                    <select id="grid-size" name="gridSize" required></select>
                 </label>
                 <label>Tema (valgfrit)
                     <input name="playerPrompt" maxlength="255" placeholder="Fx dyr i skoven">
                 </label>
                 <button id="new-crossword" type="submit">Lav krydsord</button>
             </form>
-            <p class="hint">Temaet vises på krydsordet, men styrer ikke ordene, for krydsords-API'et kan ikke vælge ord efter tema.
+            <p class="hint">De sorte felter vælges tilfældigt blandt flere layouts af den størrelse, du vælger.
+                Temaet vises på krydsordet, men styrer ikke ordene, for krydsords-API'et kan ikke vælge ord efter tema.
                 Et nyt krydsord bruger 1 af 30 månedlige udfyldninger. Store gitre kan tage længere tid eller fejle.</p>
             <p id="create-status" class="status" role="status"></p>
         </section>

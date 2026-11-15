@@ -1,12 +1,12 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
-    registerUser, fetchMe, setUnauthorizedHandler, fetchGridTemplates, fetchApiCalls,
+    registerUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls,
     fetchAdminUsers, fetchAdminUsage,
 } from "./api/crosswordApi.js";
 import { setCredentials, clearCredentials } from "./auth.js";
 import { initAuthForms } from "./components/authForms.js";
 import { renderCrosswordList, markSelected, sizeLabel } from "./components/crosswordList.js";
-import { renderTemplateOptions } from "./components/templateSelect.js";
+import { renderSizeOptions } from "./components/sizeSelect.js";
 import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crosswordGrid.js";
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
@@ -23,7 +23,7 @@ const userInfo = document.querySelector("#user-info");
 const userName = document.querySelector("#user-name");
 const logoutButton = document.querySelector("#logout");
 const createForm = document.querySelector("#create-form");
-const templateSelect = document.querySelector("#grid-template");
+const sizeSelect = document.querySelector("#grid-size");
 const createStatus = document.querySelector("#create-status");
 const newButton = document.querySelector("#new-crossword");
 const crosswordList = document.querySelector("#crossword-list");
@@ -123,7 +123,7 @@ async function loadAdmin() {
 
 async function loadApp() {
     try {
-        renderTemplateOptions(templateSelect, await fetchGridTemplates());
+        renderSizeOptions(sizeSelect, await fetchGridSizes());
     } catch (error) {
         createStatus.textContent = `Kunne ikke hente gitterstørrelser: ${error.message}`;
     }
@@ -180,7 +180,7 @@ async function onNewCrossword(event) {
     event.preventDefault();
     const data = new FormData(createForm);
     const crosswordRequest = {
-        gridTemplateId: Number(data.get("gridTemplateId")),
+        gridSize: Number(data.get("gridSize")),
         playerPrompt: data.get("playerPrompt"),
     };
     // Disabled while waiting, so a double click cannot use two fills of the quota.

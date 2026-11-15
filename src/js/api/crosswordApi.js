@@ -32,11 +32,11 @@ export function fetchCrosswords() {
     return request("/api/crosswords");
 }
 
-export function fetchGridTemplates() {
-    return request("/api/grid-templates");
+export function fetchGridSizes() {
+    return request("/api/grid-templates/sizes");
 }
 
-// crosswordRequest is { gridTemplateId, playerPrompt }.
+// crosswordRequest is { gridSize, playerPrompt }.
 export function createCrossword(crosswordRequest) {
     return request("/api/crosswords", {
         method: "POST",

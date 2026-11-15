@@ -9,6 +9,10 @@
 <body>
 <header>
     <a class="logo" href="index.html">Crosswords</a>
+    <div id="user-info" class="user-info" hidden>
+        <span id="user-name"></span>
+        <button id="logout" type="button" class="secondary">Log ud</button>
+    </div>
 </header>
 <main>
     <section>
@@ -16,6 +20,25 @@
         <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Du kan også lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
     </section>
 
+    <section id="auth" class="auth">
+        <form id="login-form" class="auth-form">
+            <h2>Log ind</h2>
+            <label>Brugernavn <input name="username" autocomplete="username" required></label>
+            <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
+            <button type="submit">Log ind</button>
+        </form>
+        <form id="register-form" class="auth-form">
+            <h2>Opret bruger</h2>
+            <label>Brugernavn <input name="username" autocomplete="username" required></label>
+            <label>Email <input name="email" type="email" autocomplete="email" required></label>
+            <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
+            <button type="submit">Opret bruger</button>
+        </form>
+        <p class="hint">Du er kun logget ind, til du lukker eller genindlæser siden.</p>
+        <p id="auth-status" class="status" role="status"></p>
+    </section>
+
+    <div id="app" hidden>
     <section>
         <h2>Vælg krydsord</h2>
         <button id="new-crossword" type="button">Hent nyt krydsord</button>
@@ -50,6 +73,7 @@
         <h3>Afleveringer</h3>
         <ul id="submission-list"></ul>
     </section>
+    </div>
 
     <p id="status" class="status" role="status"></p>
 </main>

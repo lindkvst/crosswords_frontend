@@ -11,8 +11,9 @@ export function renderSubmissions(container, submissions) {
 }
 
 function createItem(submission) {
-    // llmModel is null when a player solved it.
-    const who = submission.llmModel ? MODEL_NAMES[submission.llmModel] : "Spiller";
+    // llmModel is null when a player solved it. username is null for submissions from before login existed.
+    const player = submission.username ?? "Ukendt spiller";
+    const who = submission.llmModel ? `${MODEL_NAMES[submission.llmModel]} (startet af ${player})` : player;
     const seconds = Math.round(submission.timeToSolveMs / 1000);
 
     const item = document.createElement("li");

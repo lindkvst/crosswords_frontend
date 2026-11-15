@@ -13,6 +13,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Elements with display: flex would otherwise ignore the hidden attribute. */
+[hidden] { display: none !important; }
+
 /* ------ PAGE ------ */
 
 body {
@@ -35,6 +38,24 @@ header {
     text-decoration: none;
 }
 
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--paper);
+}
+
+.user-info button.secondary {
+    color: var(--paper);
+    border-color: var(--paper);
+}
+
 main {
     max-width: 56rem;
     margin: 0 auto;
@@ -48,6 +69,40 @@ h2 { font-size: 1.25rem; }
 h3 { font-size: 1rem; margin-bottom: 0.25rem; }
 
 .hint, .status { color: var(--muted); font-size: 0.9rem; }
+
+/* ------ LOGIN ------ */
+
+.auth {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.auth .hint, .auth .status { flex-basis: 100%; margin: 0; }
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 16rem;
+}
+
+.auth-form h2 { margin: 0 0 0.25rem; }
+
+.auth-form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+}
+
+.auth-form input {
+    padding: 0.45rem;
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 0.25rem;
+}
+
+.auth-form button { align-self: flex-start; }
 
 /* ------ BUTTONS ------ */
 

@@ -1,10 +1,23 @@
-import { fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission } from "./api/crosswordApi.js";
+import {
+    fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
+    registerUser, fetchMe, setUnauthorizedHandler,
+} from "./api/crosswordApi.js";
+import { setCredentials, clearCredentials } from "./auth.js";
+import { initAuthForms } from "./components/authForms.js";
 import { renderCrosswordList, markSelected } from "./components/crosswordList.js";
 import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crosswordGrid.js";
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
 import { MODEL_NAMES } from "./models.js";
 
+const authSection = document.querySelector("#auth");
+const authStatus = document.querySelector("#auth-status");
+const loginForm = document.querySelector("#login-form");
+const registerForm = document.querySelector("#register-form");
+const app = document.querySelector("#app");
+const userInfo = document.querySelector("#user-info");
+const userName = document.querySelector("#user-name");
+const logoutButton = document.querySelector("#logout");
 const newButton = document.querySelector("#new-crossword");
 const crosswordList = document.querySelector("#crossword-list");
 const puzzleSection = document.querySelector("#puzzle");
@@ -26,9 +39,53 @@ let startedAt = 0;
 newButton.addEventListener("click", onNewCrossword);
 submitButton.addEventListener("click", onSubmit);
 claudeButton.addEventListener("click", onClaudeSolve);
-init();
+logoutButton.addEventListener("click", showLogin);
+initAuthForms(loginForm, registerForm, { onLogin, onRegister });
+// Any 401 from the backend, e.g. a wrong password, brings the login form back.
+setUnauthorizedHandler(() => {
+    showLogin();
+    authStatus.textContent = "Log ind for at fortsætte.";
+});
 
-async function init() {
+async function onLogin(username, password) {
+    setCredentials(username, password);
+    try {
+        // /me is the cheapest call that needs login, so it checks the password.
+        const user = await fetchMe();
+        loginForm.reset();
+        await showApp(user);
+    } catch (error) {
+        authStatus.textContent = `Kunne ikke logge ind: ${error.message}`;
+    }
+}
+
+async function onRegister(user) {
+    try {
+        await registerUser(user);
+        registerForm.reset();
+        await onLogin(user.username, user.password);
+    } catch (error) {
+        authStatus.textContent = `Kunne ikke oprette bruger: ${error.message}`;
+    }
+}
+
+function showLogin() {
+    clearCredentials();
+    app.hidden = true;
+    userInfo.hidden = true;
+    authSection.hidden = false;
+}
+
+async function showApp(user) {
+    authStatus.textContent = "";
+    authSection.hidden = true;
+    userName.textContent = `Logget ind som ${user.username}`;
+    userInfo.hidden = false;
+    app.hidden = false;
+    await loadApp();
+}
+
+async function loadApp() {
     try {
         const crosswords = await loadCrosswordList();
         if (crosswords.length > 0) {

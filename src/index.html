@@ -86,7 +86,7 @@
                 <select id="claude-model">
                     <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
                     <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
-                    <option value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kan tage minutter</option>
+                    <option id="admin-model" value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kun admin, kan tage minutter</option>
                 </select>
                 <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
             </div>
@@ -106,6 +106,20 @@
             </table>
             <p class="hint">Energien er et groft estimat: watt × tid. Hjernen regnes til 20 W, en texs-server til 50 W
                 og Claude til 300–1400 W afhængigt af modellen. Tid og tokens er målt, watt er antaget.</p>
+        </section>
+
+        <section id="admin" class="panel" hidden>
+            <h2>Admin</h2>
+            <h3>Samlet forbrug</h3>
+            <table class="resource-table">
+                <thead>
+                <tr><th>API</th><th>Kald</th><th>Tid</th><th>Tokens ind/ud</th><th>Energi</th></tr>
+                </thead>
+                <tbody id="admin-usage"></tbody>
+            </table>
+            <h3>Brugere</h3>
+            <ul id="admin-users"></ul>
+            <p id="admin-status" class="status" role="status"></p>
         </section>
     </div>
 </main>

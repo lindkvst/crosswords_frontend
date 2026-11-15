@@ -1,11 +1,5 @@
-import { MODEL_NAMES } from "../models.js";
+import { MODEL_NAMES, API_NAMES } from "../models.js";
 import { formatWh } from "../energy.js";
-
-const API_NAMES = {
-    TEXS_FILL: "texs: udfyld gitter",
-    TEXS_CLUES: "texs: hent ledetråde",
-    CLAUDE_SOLVE: "Claude løser",
-};
 
 // One row per external API call, followed by one row per player submission (the human "call").
 export function renderResourceRows(tbody, apiCalls, submissions) {

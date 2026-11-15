@@ -20,6 +20,14 @@ export function fetchMe() {
     return request("/api/users/me");
 }
 
+export function fetchAdminUsers() {
+    return request("/api/admin/users");
+}
+
+export function fetchAdminUsage() {
+    return request("/api/admin/usage");
+}
+
 export function fetchCrosswords() {
     return request("/api/crosswords");
 }

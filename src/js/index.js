@@ -1,6 +1,7 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
     registerUser, fetchMe, setUnauthorizedHandler, fetchGridTemplates, fetchApiCalls,
+    fetchAdminUsers, fetchAdminUsage,
 } from "./api/crosswordApi.js";
 import { setCredentials, clearCredentials } from "./auth.js";
 import { initAuthForms } from "./components/authForms.js";
@@ -10,6 +11,7 @@ import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crossword
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
 import { renderResourceRows } from "./components/resourceTable.js";
+import { renderUsage, renderUsers } from "./components/adminPanel.js";
 import { MODEL_NAMES } from "./models.js";
 
 const authSection = document.querySelector("#auth");
@@ -38,6 +40,11 @@ const result = document.querySelector("#result");
 const submissionsSection = document.querySelector("#submissions");
 const submissionList = document.querySelector("#submission-list");
 const resourceRows = document.querySelector("#resource-rows");
+const adminModelOption = document.querySelector("#admin-model");
+const adminSection = document.querySelector("#admin");
+const adminUsage = document.querySelector("#admin-usage");
+const adminUsers = document.querySelector("#admin-users");
+const adminStatus = document.querySelector("#admin-status");
 const status = document.querySelector("#status");
 
 // The crossword on screen, and when it was shown. Used to measure the time to solve.
@@ -80,6 +87,7 @@ async function onRegister(user) {
 function showLogin() {
     clearCredentials();
     app.hidden = true;
+    adminSection.hidden = true;
     userInfo.hidden = true;
     authSection.hidden = false;
 }
@@ -90,7 +98,27 @@ async function showApp(user) {
     userName.textContent = `Logget ind som ${user.username}`;
     userInfo.hidden = false;
     app.hidden = false;
+    // Only a convenience: the backend refuses these for a player anyway.
+    const isAdmin = user.role === "ADMIN";
+    adminModelOption.disabled = !isAdmin;
+    if (!isAdmin && modelSelect.value === adminModelOption.value) {
+        modelSelect.value = "CHEAP_AND_DUMB";
+    }
+    adminSection.hidden = !isAdmin;
     await loadApp();
+    if (isAdmin) {
+        await loadAdmin();
+    }
+}
+
+async function loadAdmin() {
+    try {
+        const [usage, users] = await Promise.all([fetchAdminUsage(), fetchAdminUsers()]);
+        renderUsage(adminUsage, usage);
+        renderUsers(adminUsers, users);
+    } catch (error) {
+        adminStatus.textContent = `Kunne ikke hente admin-data: ${error.message}`;
+    }
 }
 
 async function loadApp() {

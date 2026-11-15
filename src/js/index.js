@@ -1,5 +1,5 @@
 import {
-    fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
+    fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission, startAttempt,
     registerUser, loginUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
     fetchAdminUsers, fetchAdminUsage,
 } from "./api/crosswordApi.js";
@@ -49,9 +49,10 @@ const adminUsers = document.querySelector("#admin-users");
 const adminStatus = document.querySelector("#admin-status");
 const status = document.querySelector("#status");
 
-// The crossword on screen, and when it was shown. Used to measure the time to solve.
+// The crossword on screen, and the attempt started on the server when it was shown.
+// The backend measures the player's time from that attempt, so the browser sends no time.
 let currentCrossword = null;
-let startedAt = 0;
+let currentAttemptId = null;
 // The logged-in user. Used to show "Vis svar" only on the user's own submissions.
 let currentUser = null;
 
@@ -193,7 +194,7 @@ async function loadCrosswordList() {
 
 async function showCrossword(crossword) {
     currentCrossword = crossword;
-    startedAt = Date.now();
+    currentAttemptId = null;
 
     puzzleTitle.textContent = `Krydsord ${crossword.id} · ${sizeLabel(crossword)}`;
     puzzleTheme.textContent = crossword.theme ? `Tema: ${crossword.theme}` : "";
@@ -205,7 +206,15 @@ async function showCrossword(crossword) {
     puzzleSection.hidden = false;
     submissionsSection.hidden = false;
 
-    await showSubmissions();
+    await Promise.all([startClock(), showSubmissions()]);
+}
+
+async function startClock() {
+    try {
+        currentAttemptId = (await startAttempt(currentCrossword.id)).id;
+    } catch (error) {
+        status.textContent = `Kunne ikke starte tiden: ${error.message}`;
+    }
 }
 
 // Submissions and resource usage are fetched together, because the table also shows the players' time.
@@ -261,7 +270,7 @@ async function onNewCrossword(event) {
 async function onSubmit() {
     const submission = {
         grid: readGrid(grid),
-        timeToSolveMs: Date.now() - startedAt,
+        attemptId: currentAttemptId,
     };
     try {
         const { submission: saved, cellMarks } = await postSubmission(currentCrossword.id, submission);

@@ -66,6 +66,12 @@ export function fetchSubmission(crosswordId, submissionId) {
     return request(`/api/crosswords/${crosswordId}/submissions/${submissionId}`);
 }
 
+// Starts the clock on the server when a crossword is shown. The answer's id goes back with the submission.
+export function startAttempt(crosswordId) {
+    return request(`/api/crosswords/${crosswordId}/attempts`, { method: "POST" });
+}
+
+// submission is { grid, attemptId }. The backend computes the time from the attempt.
 export function postSubmission(crosswordId, submission) {
     return request(`/api/crosswords/${crosswordId}/submissions`, {
         method: "POST",

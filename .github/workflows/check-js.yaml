@@ -1,0 +1,23 @@
+# The frontend has no build step and no tests, so CI checks that every JS file at least parses.
+# A syntax error in one ES module stops the whole page, and this catches it before it reaches main.
+name: check-js
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pinned to a commit SHA, the same version as in kino_backend.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-17
+
+      # Node is preinstalled on GitHub's Ubuntu runners, so no setup action is needed.
+      # One file per node call: "node --check a.js b.js" only checks a.js and treats b.js as an argument.
+      # xargs exits with an error if any of the calls fails, which fails the job.
+      - name: Syntax check all JavaScript
+        run: find src -name '*.js' -print0 | xargs -0 -n1 node --check

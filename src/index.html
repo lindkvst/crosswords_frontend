@@ -37,7 +37,7 @@
         <section id="auth" class="auth">
             <form id="login-form" class="stacked-form">
                 <h2>Log ind</h2>
-                <label>Brugernavn <input name="username" autocomplete="username" required></label>
+                <label>Email <input name="email" type="email" autocomplete="username" required></label>
                 <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
                 <button type="submit">Log ind</button>
             </form>
@@ -56,8 +56,8 @@
         <section class="panel">
             <form id="register-form" class="stacked-form">
                 <h2>Opret bruger</h2>
-                <label>Brugernavn <input name="username" autocomplete="username" required></label>
-                <label>Email <input name="email" type="email" autocomplete="email" required></label>
+                <label>Brugernavn (vises for andre) <input name="username" autocomplete="nickname" required></label>
+                <label>Email (bruges til login) <input name="email" type="email" autocomplete="email" required></label>
                 <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
                 <button type="submit">Opret bruger</button>
             </form>

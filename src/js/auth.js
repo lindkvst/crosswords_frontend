@@ -6,8 +6,9 @@ const TOKEN_KEY = "crosswords.token";
 
 // Only used for the login call. btoa only handles Latin-1, so the text is encoded as UTF-8 bytes first
 // (æ, ø and å in a password).
-export function basicHeader(username, password) {
-    const bytes = new TextEncoder().encode(`${username}:${password}`);
+// Users log in with their email, so the Basic "username" part is the email.
+export function basicHeader(email, password) {
+    const bytes = new TextEncoder().encode(`${email}:${password}`);
     return `Basic ${btoa(String.fromCharCode(...bytes))}`;
 }
 

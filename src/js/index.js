@@ -92,9 +92,9 @@ function onPageShown(page) {
     }
 }
 
-async function onLogin(username, password) {
+async function onLogin(email, password) {
     try {
-        const { token } = await loginUser(username, password);
+        const { token } = await loginUser(email, password);
         setToken(token);
         // The token says who the user is, but /me gives the role and email from the database.
         const user = await fetchMe();
@@ -110,7 +110,7 @@ async function onRegister(user) {
         await registerUser(user);
         registerForm.reset();
         registerStatus.textContent = "";
-        await onLogin(user.username, user.password);
+        await onLogin(user.email, user.password);
     } catch (error) {
         registerStatus.textContent = `Kunne ikke oprette bruger: ${error.message}`;
     }
@@ -224,7 +224,7 @@ async function showSubmissions() {
             fetchSubmissions(currentCrossword.id),
             fetchApiCalls(currentCrossword.id),
         ]);
-        renderSubmissions(submissionList, submissions, currentUser.username, onShowSubmission);
+        renderSubmissions(submissionList, submissions, currentUser.id, onShowSubmission);
         renderResourceRows(resourceRows, apiCalls, submissions);
     } catch (error) {
         status.textContent = `Kunne ikke hente afleveringer: ${error.message}`;

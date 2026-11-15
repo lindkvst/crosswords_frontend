@@ -4,7 +4,7 @@ export function initAuthForms(loginForm, registerForm, { onLogin, onRegister }) 
     loginForm.addEventListener("submit", event => {
         event.preventDefault();
         const data = new FormData(loginForm);
-        onLogin(data.get("username"), data.get("password"));
+        onLogin(data.get("email"), data.get("password"));
     });
     registerForm.addEventListener("submit", event => {
         event.preventDefault();

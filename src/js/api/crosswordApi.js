@@ -17,10 +17,10 @@ export function registerUser(user) {
 }
 
 // The only call with the password. The answer is { token, expiresAt }, and the token is used from then on.
-export function loginUser(username, password) {
+export function loginUser(email, password) {
     return request("/api/auth/login", {
         method: "POST",
-        headers: { Authorization: basicHeader(username, password) },
+        headers: { Authorization: basicHeader(email, password) },
     });
 }
 

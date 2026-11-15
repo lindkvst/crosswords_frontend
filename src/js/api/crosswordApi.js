@@ -53,6 +53,11 @@ export function fetchSubmissions(crosswordId) {
     return request(`/api/crosswords/${crosswordId}/submissions`);
 }
 
+// Only works for your own submissions. The backend answers 403 for anyone else's.
+export function fetchSubmission(crosswordId, submissionId) {
+    return request(`/api/crosswords/${crosswordId}/submissions/${submissionId}`);
+}
+
 export function postSubmission(crosswordId, submission) {
     return request(`/api/crosswords/${crosswordId}/submissions`, {
         method: "POST",

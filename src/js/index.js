@@ -1,6 +1,6 @@
 import {
     fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission,
-    registerUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls,
+    registerUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
     fetchAdminUsers, fetchAdminUsage,
 } from "./api/crosswordApi.js";
 import { setCredentials, clearCredentials } from "./auth.js";
@@ -50,6 +50,8 @@ const status = document.querySelector("#status");
 // The crossword on screen, and when it was shown. Used to measure the time to solve.
 let currentCrossword = null;
 let startedAt = 0;
+// The logged-in user. Used to show "Vis svar" only on the user's own submissions.
+let currentUser = null;
 
 createForm.addEventListener("submit", onNewCrossword);
 submitButton.addEventListener("click", onSubmit);
@@ -86,6 +88,7 @@ async function onRegister(user) {
 
 function showLogin() {
     clearCredentials();
+    currentUser = null;
     app.hidden = true;
     adminSection.hidden = true;
     userInfo.hidden = true;
@@ -93,6 +96,7 @@ function showLogin() {
 }
 
 async function showApp(user) {
+    currentUser = user;
     authStatus.textContent = "";
     authSection.hidden = true;
     userName.textContent = `Logget ind som ${user.username}`;
@@ -169,10 +173,23 @@ async function showSubmissions() {
             fetchSubmissions(currentCrossword.id),
             fetchApiCalls(currentCrossword.id),
         ]);
-        renderSubmissions(submissionList, submissions);
+        renderSubmissions(submissionList, submissions, currentUser.username, onShowSubmission);
         renderResourceRows(resourceRows, apiCalls, submissions);
     } catch (error) {
         status.textContent = `Kunne ikke hente afleveringer: ${error.message}`;
+    }
+}
+
+// Puts a saved submission back in the grid with green and red cells, so the player can see what was right.
+async function onShowSubmission(submission) {
+    try {
+        const { submittedGrid, cellMarks } = await fetchSubmission(currentCrossword.id, submission.id);
+        fillGrid(grid, submittedGrid);
+        markGrid(grid, cellMarks);
+        const who = submission.llmModel ? MODEL_NAMES[submission.llmModel] : "Din aflevering";
+        result.textContent = `${who}: ${submission.percentCorrect} % rigtige. Rediger gitteret og tjek igen, hvis du vil.`;
+    } catch (error) {
+        result.textContent = `Kunne ikke vise afleveringen: ${error.message}`;
     }
 }
 

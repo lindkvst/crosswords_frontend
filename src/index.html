@@ -5,29 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Crosswords</title>
     <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="stylesheet" href="css/components/grid.css">
 </head>
 <body>
 <header>
-    <a class="logo" href="index.html">Crosswords</a>
-    <div id="user-info" class="user-info" hidden>
-        <span id="user-name"></span>
-        <button id="logout" type="button" class="secondary">Log ud</button>
-    </div>
+    <nav aria-label="Hovednavigation">
+        <a class="logo" href="index.html">Crosswords</a>
+        <div id="user-info" class="user-info" hidden>
+            <span id="user-name"></span>
+            <button id="logout" type="button" class="secondary">Log ud</button>
+        </div>
+    </nav>
 </header>
 <main>
-    <section>
-        <h1>Krydsord, du selv kan løse. Indtil videre.</h1>
-        <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Du kan også lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
+    <section class="intro">
+        <h1>Dig mod Claude på danske krydsord</h1>
+        <p>Vælg en gitterstørrelse, og få et krydsord med rigtige danske ord og ledetråde. Løs det selv, og få en score og en tid.
+            Lad derefter en af tre Claude-modeller løse det samme krydsord, og se, hvem der klarer sig bedst.</p>
+        <p class="hint">Claude får kun det tomme gitter og ledetrådene, aldrig facit. Scoren regnes ud på serveren.</p>
     </section>
 
     <section id="auth" class="auth">
-        <form id="login-form" class="auth-form">
+        <form id="login-form" class="stacked-form">
             <h2>Log ind</h2>
             <label>Brugernavn <input name="username" autocomplete="username" required></label>
             <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
             <button type="submit">Log ind</button>
         </form>
-        <form id="register-form" class="auth-form">
+        <form id="register-form" class="stacked-form">
             <h2>Opret bruger</h2>
             <label>Brugernavn <input name="username" autocomplete="username" required></label>
             <label>Email <input name="email" type="email" autocomplete="email" required></label>
@@ -39,43 +44,60 @@
     </section>
 
     <div id="app" hidden>
-    <section>
-        <h2>Vælg krydsord</h2>
-        <button id="new-crossword" type="button">Hent nyt krydsord</button>
-        <p class="hint">Et nyt krydsord bruger 1 af 30 månedlige udfyldninger hos krydsords-API'et. Gemte krydsord er gratis.</p>
-        <ul id="crossword-list" class="crossword-list"></ul>
-    </section>
+        <section class="panel">
+            <h2>Nyt krydsord</h2>
+            <form id="create-form" class="stacked-form">
+                <label>Gitterstørrelse
+                    <select id="grid-template" name="gridTemplateId" required></select>
+                </label>
+                <label>Tema (valgfrit)
+                    <input name="playerPrompt" maxlength="255" placeholder="Fx dyr i skoven">
+                </label>
+                <button id="new-crossword" type="submit">Lav krydsord</button>
+            </form>
+            <p class="hint">Temaet vises på krydsordet, men styrer ikke ordene, for krydsords-API'et kan ikke vælge ord efter tema.
+                Et nyt krydsord bruger 1 af 30 månedlige udfyldninger. Store gitre kan tage længere tid eller fejle.</p>
+            <p id="create-status" class="status" role="status"></p>
+        </section>
 
-    <section id="puzzle" hidden>
-        <h2 id="puzzle-title"></h2>
-        <div class="puzzle-layout">
-            <div id="grid" class="grid"></div>
-            <div class="clues">
-                <h3>Vandret</h3>
-                <ul id="clues-across"></ul>
-                <h3>Lodret</h3>
-                <ul id="clues-down"></ul>
+        <section class="panel">
+            <h2>Gemte krydsord</h2>
+            <ul id="crossword-list" class="crossword-list"></ul>
+            <p id="status" class="status" role="status"></p>
+        </section>
+
+        <section id="puzzle" class="panel" hidden>
+            <h2 id="puzzle-title"></h2>
+            <p id="puzzle-theme" class="theme"></p>
+            <div class="puzzle-layout">
+                <div class="grid-scroll">
+                    <div id="grid" class="grid"></div>
+                </div>
+                <div class="clues">
+                    <h3>Vandret</h3>
+                    <ul id="clues-across"></ul>
+                    <h3>Lodret</h3>
+                    <ul id="clues-down"></ul>
+                </div>
             </div>
-        </div>
-        <div class="actions">
-            <button id="submit" type="button">Tjek løsning</button>
-            <label class="model-label" for="claude-model">Model</label>
-            <select id="claude-model">
-                <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
-                <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
-                <option value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kan tage minutter</option>
-            </select>
-            <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
-        </div>
-        <p class="hint">Claude får det tomme gitter og ledetrådene, aldrig facit. Claudes bogstaver vises i gitteret bagefter.</p>
-        <p id="result" class="result" role="status"></p>
+            <div class="actions">
+                <button id="submit" type="button">Tjek løsning</button>
+                <label class="model-label" for="claude-model">Model</label>
+                <select id="claude-model">
+                    <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
+                    <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
+                    <option value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kan tage minutter</option>
+                </select>
+                <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
+            </div>
+            <p id="result" class="result" role="status"></p>
+        </section>
 
-        <h3>Afleveringer</h3>
-        <ul id="submission-list"></ul>
-    </section>
+        <section id="submissions" class="panel" hidden>
+            <h2>Afleveringer</h2>
+            <ul id="submission-list" class="submission-list"></ul>
+        </section>
     </div>
-
-    <p id="status" class="status" role="status"></p>
 </main>
 <script type="module" src="js/index.js"></script>
 </body>

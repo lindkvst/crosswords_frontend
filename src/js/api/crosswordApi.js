@@ -24,8 +24,17 @@ export function fetchCrosswords() {
     return request("/api/crosswords");
 }
 
-export function createCrossword() {
-    return request("/api/crosswords", { method: "POST" });
+export function fetchGridTemplates() {
+    return request("/api/grid-templates");
+}
+
+// crosswordRequest is { gridTemplateId, playerPrompt }.
+export function createCrossword(crosswordRequest) {
+    return request("/api/crosswords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(crosswordRequest),
+    });
 }
 
 export function fetchSubmissions(crosswordId) {

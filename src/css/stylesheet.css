@@ -31,6 +31,7 @@ header { background: var(--ink); }
 
 nav {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
@@ -44,6 +45,28 @@ nav {
     font-weight: 700;
     font-size: 1.25rem;
     text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0 auto 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.nav-links a {
+    color: var(--paper);
+    text-decoration: none;
+    opacity: 0.75;
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
 }
 
 .user-info {

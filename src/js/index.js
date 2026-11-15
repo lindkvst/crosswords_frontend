@@ -13,12 +13,14 @@ import { renderSubmissions } from "./components/submissionList.js";
 import { renderResourceRows } from "./components/resourceTable.js";
 import { renderUsage, renderUsers } from "./components/adminPanel.js";
 import { MODEL_NAMES } from "./models.js";
+import { initRouter, goTo } from "./router.js";
 
 const authSection = document.querySelector("#auth");
 const authStatus = document.querySelector("#auth-status");
 const loginForm = document.querySelector("#login-form");
 const registerForm = document.querySelector("#register-form");
-const app = document.querySelector("#app");
+const welcome = document.querySelector("#welcome");
+const navStats = document.querySelector("#nav-stats");
 const userInfo = document.querySelector("#user-info");
 const userName = document.querySelector("#user-name");
 const logoutButton = document.querySelector("#logout");
@@ -41,7 +43,6 @@ const submissionsSection = document.querySelector("#submissions");
 const submissionList = document.querySelector("#submission-list");
 const resourceRows = document.querySelector("#resource-rows");
 const adminModelOption = document.querySelector("#admin-model");
-const adminSection = document.querySelector("#admin");
 const adminUsage = document.querySelector("#admin-usage");
 const adminUsers = document.querySelector("#admin-users");
 const adminStatus = document.querySelector("#admin-status");
@@ -63,6 +64,26 @@ setUnauthorizedHandler(() => {
     showLogin();
     authStatus.textContent = "Log ind for at fortsætte.";
 });
+initRouter({ canShow, onShow: onPageShown });
+
+// Home and Kontakt are open to everyone. Only a convenience: the backend answers 401/403 anyway.
+function canShow(page) {
+    if (page === "spil" && !currentUser) {
+        authStatus.textContent = "Log ind for at spille.";
+        return false;
+    }
+    if (page === "stats") {
+        return currentUser?.role === "ADMIN";
+    }
+    return true;
+}
+
+// Stats is fetched every time the page is opened, so the numbers include the latest calls.
+function onPageShown(page) {
+    if (page === "stats") {
+        loadAdmin();
+    }
+}
 
 async function onLogin(username, password) {
     setCredentials(username, password);
@@ -89,10 +110,11 @@ async function onRegister(user) {
 function showLogin() {
     clearCredentials();
     currentUser = null;
-    app.hidden = true;
-    adminSection.hidden = true;
     userInfo.hidden = true;
+    navStats.hidden = true;
+    welcome.hidden = true;
     authSection.hidden = false;
+    goTo("home");
 }
 
 async function showApp(user) {
@@ -101,18 +123,16 @@ async function showApp(user) {
     authSection.hidden = true;
     userName.textContent = `Logget ind som ${user.username}`;
     userInfo.hidden = false;
-    app.hidden = false;
+    welcome.hidden = false;
     // Only a convenience: the backend refuses these for a player anyway.
     const isAdmin = user.role === "ADMIN";
     adminModelOption.disabled = !isAdmin;
     if (!isAdmin && modelSelect.value === adminModelOption.value) {
         modelSelect.value = "CHEAP_AND_DUMB";
     }
-    adminSection.hidden = !isAdmin;
+    navStats.hidden = !isAdmin;
     await loadApp();
-    if (isAdmin) {
-        await loadAdmin();
-    }
+    goTo("spil");
 }
 
 async function loadAdmin() {

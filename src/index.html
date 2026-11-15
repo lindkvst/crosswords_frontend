@@ -10,7 +10,13 @@
 <body>
 <header>
     <nav aria-label="Hovednavigation">
-        <a class="logo" href="index.html">Crosswords</a>
+        <a class="logo" href="#home">Crosswords</a>
+        <ul class="nav-links">
+            <li><a href="#home" data-nav="home">Home</a></li>
+            <li><a href="#spil" data-nav="spil">Spil</a></li>
+            <li><a href="#kontakt" data-nav="kontakt">Kontakt</a></li>
+            <li id="nav-stats" hidden><a href="#stats" data-nav="stats">Stats</a></li>
+        </ul>
         <div id="user-info" class="user-info" hidden>
             <span id="user-name"></span>
             <button id="logout" type="button" class="secondary">Log ud</button>
@@ -18,32 +24,41 @@
     </nav>
 </header>
 <main>
-    <section class="intro">
-        <h1>Dig mod Claude på danske krydsord</h1>
-        <p>Vælg en gitterstørrelse, og få et krydsord med rigtige danske ord og ledetråde. Løs det selv, og få en score og en tid.
-            Lad derefter en af tre Claude-modeller løse det samme krydsord, og se, hvem der klarer sig bedst.</p>
-        <p class="hint">Claude får kun det tomme gitter og ledetrådene, aldrig facit. Scoren regnes ud på serveren.</p>
-    </section>
+    <!-- Each data-page is one "page". js/router.js shows the one named in the URL's #, so the page never reloads
+         and the login, which only lives in memory, survives navigation. -->
+    <div data-page="home">
+        <section class="intro">
+            <h1>Dig mod Claude på danske krydsord</h1>
+            <p>Vælg en gitterstørrelse, og få et krydsord med rigtige danske ord og ledetråde. Løs det selv, og få en score og en tid.
+                Lad derefter en af tre Claude-modeller løse det samme krydsord, og se, hvem der klarer sig bedst.</p>
+            <p class="hint">Claude får kun det tomme gitter og ledetrådene, aldrig facit. Scoren regnes ud på serveren.</p>
+        </section>
 
-    <section id="auth" class="auth">
-        <form id="login-form" class="stacked-form">
-            <h2>Log ind</h2>
-            <label>Brugernavn <input name="username" autocomplete="username" required></label>
-            <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
-            <button type="submit">Log ind</button>
-        </form>
-        <form id="register-form" class="stacked-form">
-            <h2>Opret bruger</h2>
-            <label>Brugernavn <input name="username" autocomplete="username" required></label>
-            <label>Email <input name="email" type="email" autocomplete="email" required></label>
-            <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
-            <button type="submit">Opret bruger</button>
-        </form>
-        <p class="hint">Du er kun logget ind, til du lukker eller genindlæser siden.</p>
-        <p id="auth-status" class="status" role="status"></p>
-    </section>
+        <section id="auth" class="auth">
+            <form id="login-form" class="stacked-form">
+                <h2>Log ind</h2>
+                <label>Brugernavn <input name="username" autocomplete="username" required></label>
+                <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
+                <button type="submit">Log ind</button>
+            </form>
+            <form id="register-form" class="stacked-form">
+                <h2>Opret bruger</h2>
+                <label>Brugernavn <input name="username" autocomplete="username" required></label>
+                <label>Email <input name="email" type="email" autocomplete="email" required></label>
+                <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
+                <button type="submit">Opret bruger</button>
+            </form>
+            <p class="hint">Du er kun logget ind, til du lukker eller genindlæser siden.</p>
+            <p id="auth-status" class="status" role="status"></p>
+        </section>
 
-    <div id="app" hidden>
+        <section id="welcome" class="panel" hidden>
+            <h2>Du er logget ind</h2>
+            <p><a href="#spil">Gå til spillet</a> for at lave et krydsord, løse det og lade Claude prøve.</p>
+        </section>
+    </div>
+
+    <div data-page="spil" hidden>
         <section class="panel">
             <h2>Nyt krydsord</h2>
             <form id="create-form" class="stacked-form">
@@ -109,8 +124,27 @@
                 og Claude til 300–1400 W afhængigt af modellen. Tid og tokens er målt, watt er antaget.</p>
         </section>
 
-        <section id="admin" class="panel" hidden>
-            <h2>Admin</h2>
+    </div>
+
+    <div data-page="kontakt" hidden>
+        <section class="panel">
+            <h2>Kontakt</h2>
+            <p>Crosswords er et skoleprojekt fra AI-projektugen på 3. semester af datamatikeruddannelsen på EK.
+                Projektet viser kald mellem frontend og backend, kald til to eksterne API'er og sikker brug af API-nøgler.</p>
+            <p>Krydsordene kommer fra <a href="https://crossword.texs.org/crossword-api">Crossword Generator API</a>,
+                og de løses af Claude fra <a href="https://www.anthropic.com">Anthropic</a>.</p>
+            <h3>Koden på GitHub</h3>
+            <ul>
+                <li><a href="https://github.com/lindkvst/crosswords_backend">crosswords_backend</a> (Spring Boot)</li>
+                <li><a href="https://github.com/lindkvst/crosswords_frontend">crosswords_frontend</a> (HTML, CSS og JavaScript)</li>
+            </ul>
+        </section>
+    </div>
+
+    <div data-page="stats" hidden>
+        <section id="admin" class="panel">
+            <h2>Stats</h2>
+            <p class="hint">Kun for admin. Hentes igen, hver gang siden åbnes.</p>
             <h3>Samlet forbrug</h3>
             <table class="resource-table">
                 <thead>

@@ -3,15 +3,19 @@
 :root {
     --ink: hsl(220, 25%, 14%);
     --paper: hsl(40, 30%, 97%);
+    --card: white;
     --line: hsl(220, 15%, 30%);
+    --soft-line: hsl(220, 15%, 85%);
     --muted: hsl(220, 10%, 42%);
     --accent: hsl(212, 70%, 40%);
-    --cell-size: 3.25rem;
 
     --font-family: system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Elements with display: flex would otherwise ignore the hidden attribute. */
+[hidden] { display: none !important; }
 
 /* ------ PAGE ------ */
 
@@ -23,9 +27,17 @@ body {
     line-height: 1.5;
 }
 
-header {
+header { background: var(--ink); }
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    max-width: 60rem;
+    margin: 0 auto;
     padding: 1rem 1.5rem;
-    background: var(--ink);
 }
 
 .logo {
@@ -35,19 +47,103 @@ header {
     text-decoration: none;
 }
 
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0 auto 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.nav-links a {
+    color: var(--paper);
+    text-decoration: none;
+    opacity: 0.75;
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--paper);
+}
+
+.user-info button.secondary {
+    color: var(--paper);
+    border-color: var(--paper);
+}
+
 main {
-    max-width: 56rem;
+    max-width: 60rem;
     margin: 0 auto;
     padding: 1.5rem;
 }
 
-section { margin-bottom: 2rem; }
+section { margin-bottom: 1.5rem; }
 
 h1 { font-size: 1.75rem; text-wrap: balance; }
-h2 { font-size: 1.25rem; }
+h2 { font-size: 1.25rem; margin-top: 0; }
 h3 { font-size: 1rem; margin-bottom: 0.25rem; }
 
+.intro p { max-width: 42rem; }
+
+/* The three parts of the app (new crossword, list, solving) each get their own card. */
+.panel {
+    padding: 1.25rem 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--soft-line);
+    border-radius: 0.5rem;
+}
+
 .hint, .status { color: var(--muted); font-size: 0.9rem; }
+
+.theme { margin-top: -0.5rem; color: var(--muted); font-style: italic; }
+
+.result { font-weight: 700; }
+
+/* ------ FORMS ------ */
+
+.auth {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.auth .hint, .auth .status { flex-basis: 100%; margin: 0; }
+
+.stacked-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 22rem;
+    min-width: 16rem;
+}
+
+.stacked-form h2 { margin: 0 0 0.25rem; }
+
+.stacked-form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+}
+
+.stacked-form input, select {
+    padding: 0.45rem;
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 0.25rem;
+    background: white;
+}
+
+.stacked-form button { align-self: flex-start; }
 
 /* ------ BUTTONS ------ */
 
@@ -63,33 +159,28 @@ button {
 
 button:disabled { opacity: 0.5; cursor: wait; }
 
-.actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.actions { align-items: center; flex-wrap: wrap; }
-
-.model-label { margin-left: 1rem; color: var(--muted); }
-
-select {
-    padding: 0.45rem;
-    font: inherit;
-    border: 1px solid var(--line);
-    border-radius: 0.25rem;
-    background: white;
-}
-
 button.secondary {
     color: var(--ink);
     background: transparent;
     border: 1px solid var(--line);
 }
 
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.model-label { margin-left: 1rem; color: var(--muted); }
+
+/* ------ LISTS ------ */
+
 .crossword-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin: 0;
     padding: 0;
     list-style: none;
 }
@@ -98,6 +189,7 @@ button.secondary {
     color: var(--ink);
     background: transparent;
     border: 1px solid var(--line);
+    text-align: left;
 }
 
 .crossword-list button.selected {
@@ -105,65 +197,35 @@ button.secondary {
     background: var(--ink);
 }
 
-/* ------ PUZZLE ------ */
-
-.puzzle-layout {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-bottom: 1rem;
+.crossword-list .theme-label {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.8;
 }
 
-/* --columns is set from JavaScript, so the same CSS works for any grid size. */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(var(--columns), var(--cell-size));
-    width: max-content;
-    border: 2px solid var(--line);
+.submission-list { margin: 0; padding-left: 1.25rem; }
+
+.submission-list li { margin-bottom: 0.25rem; }
+
+button.small {
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.85rem;
 }
 
-.cell {
-    position: relative;
-    height: var(--cell-size);
-    border: 1px solid var(--line);
-    background: white;
-}
+/* ------ RESOURCES ------ */
 
-.cell.black { background: var(--ink); }
-
-/* Colours after "Tjek løsning". Light shades so the letters stay readable. */
-.cell.correct { background: hsl(130, 55%, 85%); }
-.cell.wrong { background: hsl(0, 75%, 87%); }
-
-.cell-number {
-    position: absolute;
-    top: 0.1rem;
-    left: 0.2rem;
-    font-size: 0.65rem;
-    color: var(--muted);
-}
-
-.cell input {
+.resource-table {
     width: 100%;
-    height: 100%;
-    padding-top: 0.6rem;
-    font: inherit;
-    font-size: 1.4rem;
-    text-align: center;
-    text-transform: uppercase;
-    background: transparent;
-    border: none;
+    border-collapse: collapse;
+    font-size: 0.9rem;
 }
 
-.cell input:focus {
-    outline: 3px solid var(--accent);
-    outline-offset: -3px;
+.resource-table th, .resource-table td {
+    padding: 0.35rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--soft-line);
 }
 
-.clues ul {
-    margin-top: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.result { font-weight: 700; }
+/* Numbers line up when they are right-aligned. */
+.resource-table td:not(:first-child), .resource-table th:not(:first-child) { text-align: right; }

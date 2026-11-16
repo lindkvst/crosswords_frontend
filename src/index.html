@@ -5,53 +5,171 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Crosswords</title>
     <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="stylesheet" href="css/components/grid.css">
 </head>
 <body>
 <header>
-    <a class="logo" href="index.html">Crosswords</a>
+    <nav aria-label="Hovednavigation">
+        <a class="logo" href="#home">Crosswords</a>
+        <ul class="nav-links">
+            <li><a href="#home" data-nav="home">Home</a></li>
+            <li><a href="#spil" data-nav="spil">Spil</a></li>
+            <li><a href="#kontakt" data-nav="kontakt">Kontakt</a></li>
+            <li id="nav-stats" hidden><a href="#stats" data-nav="stats">Stats</a></li>
+        </ul>
+        <div id="user-info" class="user-info" hidden>
+            <span id="user-name"></span>
+            <button id="logout" type="button" class="secondary">Log ud</button>
+        </div>
+    </nav>
 </header>
 <main>
-    <section>
-        <h1>Krydsord, du selv kan løse. Indtil videre.</h1>
-        <p>Hent et krydsord på 5×5 felter og løs det. Du får en score og en tid. Du kan også lade Claude løse det samme krydsord og se, hvem der klarer sig bedst.</p>
-    </section>
+    <!-- Each data-page is one "page". js/router.js shows the one named in the URL's #, so the page never reloads
+         and the login, which only lives in memory, survives navigation. -->
+    <div data-page="home">
+        <section class="intro">
+            <h1>Dig mod Claude på danske krydsord</h1>
+            <p>Vælg en gitterstørrelse, og få et krydsord med rigtige danske ord og ledetråde. Løs det selv, og få en score og en tid.
+                Lad derefter en af tre Claude-modeller løse det samme krydsord, og se, hvem der klarer sig bedst.</p>
+            <p class="hint">Claude får kun det tomme gitter og ledetrådene, aldrig facit. Scoren regnes ud på serveren.</p>
+        </section>
 
-    <section>
-        <h2>Vælg krydsord</h2>
-        <button id="new-crossword" type="button">Hent nyt krydsord</button>
-        <p class="hint">Et nyt krydsord bruger 1 af 30 månedlige udfyldninger hos krydsords-API'et. Gemte krydsord er gratis.</p>
-        <ul id="crossword-list" class="crossword-list"></ul>
-    </section>
+        <section id="auth" class="auth">
+            <form id="login-form" class="stacked-form">
+                <h2>Log ind</h2>
+                <label>Email <input name="email" type="email" autocomplete="username" required></label>
+                <label>Adgangskode <input name="password" type="password" autocomplete="current-password" required></label>
+                <button type="submit">Log ind</button>
+            </form>
+            <p class="hint">Ny her? <a href="#opret">Opret en bruger</a>.</p>
+            <p class="hint">Du forbliver logget ind, til du logger ud, lukker fanen, eller der er gået en time.</p>
+            <p id="auth-status" class="status" role="status"></p>
+        </section>
 
-    <section id="puzzle" hidden>
-        <h2 id="puzzle-title"></h2>
-        <div class="puzzle-layout">
-            <div id="grid" class="grid"></div>
-            <div class="clues">
-                <h3>Vandret</h3>
-                <ul id="clues-across"></ul>
-                <h3>Lodret</h3>
-                <ul id="clues-down"></ul>
+        <section id="welcome" class="panel" hidden>
+            <h2>Du er logget ind</h2>
+            <p><a href="#spil">Gå til spillet</a> for at lave et krydsord, løse det og lade Claude prøve.</p>
+        </section>
+    </div>
+
+    <div data-page="opret" hidden>
+        <section class="panel">
+            <form id="register-form" class="stacked-form">
+                <h2>Opret bruger</h2>
+                <label>Brugernavn (vises for andre) <input name="username" autocomplete="nickname" required></label>
+                <label>Email (bruges til login) <input name="email" type="email" autocomplete="email" required></label>
+                <label>Adgangskode <input name="password" type="password" autocomplete="new-password" required></label>
+                <button type="submit">Opret bruger</button>
+            </form>
+            <p class="hint">Du bliver logget ind med det samme. Har du allerede en bruger? <a href="#home">Log ind</a>.</p>
+            <p id="register-status" class="status" role="status"></p>
+        </section>
+    </div>
+
+    <div data-page="spil" hidden>
+        <section class="panel">
+            <h2>Nyt krydsord</h2>
+            <form id="create-form" class="stacked-form">
+                <label>Gitterstørrelse
+                    <select id="grid-size" name="gridSize" required></select>
+                </label>
+                <label>Tema (valgfrit)
+                    <input name="playerPrompt" maxlength="255" placeholder="Fx dyr i skoven">
+                </label>
+                <button id="new-crossword" type="submit">Lav krydsord</button>
+            </form>
+            <p class="hint">De sorte felter vælges tilfældigt blandt flere layouts af den størrelse, du vælger.
+                Temaet vises på krydsordet, men styrer ikke ordene, for krydsords-API'et kan ikke vælge ord efter tema.
+                Et nyt krydsord bruger 1 af 30 månedlige udfyldninger. Store gitre kan tage længere tid eller fejle.</p>
+            <p id="create-status" class="status" role="status"></p>
+        </section>
+
+        <section class="panel">
+            <h2>Gemte krydsord</h2>
+            <ul id="crossword-list" class="crossword-list"></ul>
+            <p id="status" class="status" role="status"></p>
+        </section>
+
+        <section id="puzzle" class="panel" hidden>
+            <h2 id="puzzle-title"></h2>
+            <p id="puzzle-theme" class="theme"></p>
+            <div class="puzzle-layout">
+                <div class="grid-scroll">
+                    <div id="grid" class="grid"></div>
+                </div>
+                <div class="clues">
+                    <h3>Vandret</h3>
+                    <ul id="clues-across"></ul>
+                    <h3>Lodret</h3>
+                    <ul id="clues-down"></ul>
+                </div>
             </div>
-        </div>
-        <div class="actions">
-            <button id="submit" type="button">Tjek løsning</button>
-            <label class="model-label" for="claude-model">Model</label>
-            <select id="claude-model">
-                <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
-                <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
-                <option value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kan tage minutter</option>
-            </select>
-            <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
-        </div>
-        <p class="hint">Claude får det tomme gitter og ledetrådene, aldrig facit. Claudes bogstaver vises i gitteret bagefter.</p>
-        <p id="result" class="result" role="status"></p>
+            <div class="actions">
+                <button id="submit" type="button">Tjek løsning</button>
+                <label class="model-label" for="claude-model">Model</label>
+                <select id="claude-model">
+                    <option value="CHEAP_AND_DUMB">Billig og Dum (Haiku)</option>
+                    <option value="SMARTER_AND_PRICIER">Lidt Klogere og Dyrere (Sonnet)</option>
+                    <option id="admin-model" value="TOTAL_TOKEN_KILLER">Total Token Killer (Fable) – kun admin, kan tage minutter</option>
+                </select>
+                <button id="claude-solve" type="button" class="secondary">Lad Claude løse det</button>
+            </div>
+            <p id="result" class="result" role="status"></p>
+        </section>
 
-        <h3>Afleveringer</h3>
-        <ul id="submission-list"></ul>
-    </section>
+        <section id="submissions" class="panel" hidden>
+            <h2>Afleveringer</h2>
+            <ul id="submission-list" class="submission-list"></ul>
 
-    <p id="status" class="status" role="status"></p>
+            <h3>Ressourceforbrug</h3>
+            <table class="resource-table">
+                <thead>
+                <tr><th>Kald</th><th>Tid</th><th>Tokens ind/ud</th><th>Energi</th></tr>
+                </thead>
+                <tbody id="resource-rows"></tbody>
+            </table>
+            <p class="hint">Energien er et groft estimat: watt × tid. Hjernen regnes til 20 W, en texs-server til 50 W
+                og Claude til 300–1400 W afhængigt af modellen. Tid og tokens er målt, watt er antaget.</p>
+        </section>
+
+    </div>
+
+    <div data-page="kontakt" hidden>
+        <section class="panel">
+            <h2>Kontakt</h2>
+            <p>Crosswords er et skoleprojekt fra AI-projektugen på 3. semester af datamatikeruddannelsen på EK.
+                Projektet viser kald mellem frontend og backend, kald til to eksterne API'er og sikker brug af API-nøgler.</p>
+            <p>Krydsordene kommer fra <a href="https://crossword.texs.org/crossword-api">Crossword Generator API</a>,
+                og de løses af Claude fra <a href="https://www.anthropic.com">Anthropic</a>.</p>
+            <h3>Koden på GitHub</h3>
+            <ul>
+                <li><a href="https://github.com/lindkvst/crosswords_backend">crosswords_backend</a> (Spring Boot)</li>
+                <li><a href="https://github.com/lindkvst/crosswords_frontend">crosswords_frontend</a> (HTML, CSS og JavaScript)</li>
+            </ul>
+        </section>
+    </div>
+
+    <div data-page="stats" hidden>
+        <section id="admin" class="panel">
+            <h2>Stats</h2>
+            <p class="hint">Kun for admin. Hentes igen, hver gang siden åbnes.</p>
+            <h3>Samlet forbrug</h3>
+            <table class="resource-table">
+                <thead>
+                <tr><th>API</th><th>Kald</th><th>Tid</th><th>Tokens ind/ud</th><th>Energi</th></tr>
+                </thead>
+                <tbody id="admin-usage"></tbody>
+            </table>
+            <h3>Brugere</h3>
+            <ul id="admin-users"></ul>
+            <h3>Rollematrix</h3>
+            <p class="hint">Hvilke rettigheder hver rolle har, læst fra databasen. Hold musen over et navn for at se beskrivelsen.</p>
+            <div class="grid-scroll">
+                <table id="role-matrix" class="resource-table"></table>
+            </div>
+            <p id="admin-status" class="status" role="status"></p>
+        </section>
+    </div>
 </main>
 <script type="module" src="js/index.js"></script>
 </body>

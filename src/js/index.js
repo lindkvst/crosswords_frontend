@@ -1,14 +1,38 @@
-import { fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission } from "./api/crosswordApi.js";
-import { renderCrosswordList, markSelected } from "./components/crosswordList.js";
+import {
+    fetchCrosswords, createCrossword, fetchSubmissions, postSubmission, postClaudeSubmission, startAttempt,
+    registerUser, loginUser, fetchMe, setUnauthorizedHandler, fetchGridSizes, fetchApiCalls, fetchSubmission,
+    fetchAdminUsers, fetchAdminUsage, fetchAdminRoles,
+} from "./api/crosswordApi.js";
+import { setToken, clearToken, getAuthHeader } from "./auth.js";
+import { initAuthForms } from "./components/authForms.js";
+import { renderCrosswordList, markSelected, sizeLabel } from "./components/crosswordList.js";
+import { renderSizeOptions } from "./components/sizeSelect.js";
 import { renderGrid, readGrid, markGrid, fillGrid } from "./components/crosswordGrid.js";
 import { renderClues } from "./components/clueList.js";
 import { renderSubmissions } from "./components/submissionList.js";
+import { renderResourceRows } from "./components/resourceTable.js";
+import { renderUsage, renderUsers, renderRoleMatrix } from "./components/adminPanel.js";
 import { MODEL_NAMES } from "./models.js";
+import { initRouter, goTo } from "./router.js";
 
+const authSection = document.querySelector("#auth");
+const authStatus = document.querySelector("#auth-status");
+const loginForm = document.querySelector("#login-form");
+const registerForm = document.querySelector("#register-form");
+const registerStatus = document.querySelector("#register-status");
+const welcome = document.querySelector("#welcome");
+const navStats = document.querySelector("#nav-stats");
+const userInfo = document.querySelector("#user-info");
+const userName = document.querySelector("#user-name");
+const logoutButton = document.querySelector("#logout");
+const createForm = document.querySelector("#create-form");
+const sizeSelect = document.querySelector("#grid-size");
+const createStatus = document.querySelector("#create-status");
 const newButton = document.querySelector("#new-crossword");
 const crosswordList = document.querySelector("#crossword-list");
 const puzzleSection = document.querySelector("#puzzle");
 const puzzleTitle = document.querySelector("#puzzle-title");
+const puzzleTheme = document.querySelector("#puzzle-theme");
 const grid = document.querySelector("#grid");
 const cluesAcross = document.querySelector("#clues-across");
 const cluesDown = document.querySelector("#clues-down");
@@ -16,25 +40,153 @@ const submitButton = document.querySelector("#submit");
 const claudeButton = document.querySelector("#claude-solve");
 const modelSelect = document.querySelector("#claude-model");
 const result = document.querySelector("#result");
+const submissionsSection = document.querySelector("#submissions");
 const submissionList = document.querySelector("#submission-list");
+const resourceRows = document.querySelector("#resource-rows");
+const adminModelOption = document.querySelector("#admin-model");
+const adminUsage = document.querySelector("#admin-usage");
+const adminUsers = document.querySelector("#admin-users");
+const roleMatrix = document.querySelector("#role-matrix");
+const adminStatus = document.querySelector("#admin-status");
 const status = document.querySelector("#status");
 
-// The crossword on screen, and when it was shown. Used to measure the time to solve.
+// The crossword on screen, and the attempt started on the server when it was shown.
+// The backend measures the player's time from that attempt, so the browser sends no time.
 let currentCrossword = null;
-let startedAt = 0;
+let currentAttemptId = null;
+// The logged-in user. Used to show "Vis svar" only on the user's own submissions.
+let currentUser = null;
 
-newButton.addEventListener("click", onNewCrossword);
+createForm.addEventListener("submit", onNewCrossword);
 submitButton.addEventListener("click", onSubmit);
 claudeButton.addEventListener("click", onClaudeSolve);
-init();
+logoutButton.addEventListener("click", showLogin);
+initAuthForms(loginForm, registerForm, { onLogin, onRegister });
+// Any 401 from the backend, e.g. a wrong password, brings the login form back.
+setUnauthorizedHandler(() => {
+    showLogin();
+    authStatus.textContent = "Log ind for at fortsætte.";
+});
+initRouter({ canShow, onShow: onPageShown });
+resumeLogin();
 
-async function init() {
+// Home and Kontakt are open to everyone, Opret only when logged out.
+// Only a convenience: the backend answers 401/403 anyway.
+function canShow(page) {
+    if (page === "opret") {
+        return !currentUser;
+    }
+    if (page === "spil" && !currentUser) {
+        authStatus.textContent = "Log ind for at spille.";
+        return false;
+    }
+    if (page === "stats") {
+        return can("VIEW_STATS");
+    }
+    return true;
+}
+
+// Stats is fetched every time the page is opened, so the numbers include the latest calls.
+function onPageShown(page) {
+    if (page === "stats") {
+        loadAdmin();
+    }
+}
+
+async function onLogin(email, password) {
+    try {
+        const { token } = await loginUser(email, password);
+        setToken(token);
+        // The token says who the user is, but /me gives the role and email from the database.
+        const user = await fetchMe();
+        loginForm.reset();
+        await showApp(user);
+    } catch (error) {
+        authStatus.textContent = `Kunne ikke logge ind: ${error.message}`;
+    }
+}
+
+async function onRegister(user) {
+    try {
+        await registerUser(user);
+        registerForm.reset();
+        registerStatus.textContent = "";
+        await onLogin(user.email, user.password);
+    } catch (error) {
+        registerStatus.textContent = `Kunne ikke oprette bruger: ${error.message}`;
+    }
+}
+
+function showLogin() {
+    clearToken();
+    currentUser = null;
+    userInfo.hidden = true;
+    navStats.hidden = true;
+    welcome.hidden = true;
+    authSection.hidden = false;
+    goTo("home");
+}
+
+// startPage is "spil" after a login. After a reload it is the page the user was on.
+async function showApp(user, startPage = "spil") {
+    currentUser = user;
+    authStatus.textContent = "";
+    authSection.hidden = true;
+    userName.textContent = `Logget ind som ${user.username}`;
+    userInfo.hidden = false;
+    welcome.hidden = false;
+    // Only a convenience: the backend checks the same permissions on every request anyway.
+    const canUsePremium = can("USE_PREMIUM_MODEL");
+    adminModelOption.disabled = !canUsePremium;
+    if (!canUsePremium && modelSelect.value === adminModelOption.value) {
+        modelSelect.value = "CHEAP_AND_DUMB";
+    }
+    navStats.hidden = !can("VIEW_STATS");
+    await loadApp();
+    goTo(startPage);
+}
+
+// After a reload the token is still in sessionStorage, so the user stays logged in until the tab is closed
+// or the token expires (then /me answers 401, and the login form is shown).
+async function resumeLogin() {
+    if (!getAuthHeader()) {
+        return;
+    }
+    try {
+        await showApp(await fetchMe(), location.hash.slice(1) || "spil");
+    } catch {
+        // The 401 handler has already shown the login form.
+    }
+}
+
+// The frontend asks about permissions, never role names, like the backend (see the role matrix).
+function can(permission) {
+    return currentUser?.permissions?.includes(permission) ?? false;
+}
+
+async function loadAdmin() {
+    try {
+        const [usage, users, matrix] = await Promise.all([fetchAdminUsage(), fetchAdminUsers(), fetchAdminRoles()]);
+        renderUsage(adminUsage, usage);
+        renderUsers(adminUsers, users);
+        renderRoleMatrix(roleMatrix, matrix);
+    } catch (error) {
+        adminStatus.textContent = `Kunne ikke hente admin-data: ${error.message}`;
+    }
+}
+
+async function loadApp() {
+    try {
+        renderSizeOptions(sizeSelect, await fetchGridSizes());
+    } catch (error) {
+        createStatus.textContent = `Kunne ikke hente gitterstørrelser: ${error.message}`;
+    }
     try {
         const crosswords = await loadCrosswordList();
         if (crosswords.length > 0) {
             await showCrossword(crosswords.at(-1));
         } else {
-            status.textContent = "Der er ingen gemte krydsord. Hent et nyt for at komme i gang.";
+            status.textContent = "Der er ingen gemte krydsord. Lav et nyt ovenfor for at komme i gang.";
         }
     } catch (error) {
         status.textContent = `Kunne ikke hente krydsord: ${error.message}`;
@@ -49,37 +201,74 @@ async function loadCrosswordList() {
 
 async function showCrossword(crossword) {
     currentCrossword = crossword;
-    startedAt = Date.now();
+    currentAttemptId = null;
 
-    puzzleTitle.textContent = `Krydsord ${crossword.id}`;
+    puzzleTitle.textContent = `Krydsord ${crossword.id} · ${sizeLabel(crossword)}`;
+    puzzleTheme.textContent = crossword.theme ? `Tema: ${crossword.theme}` : "";
     markSelected(crosswordList, crossword.id);
     renderGrid(grid, crossword.puzzle);
     renderClues(cluesAcross, cluesDown, crossword.puzzle.clues);
     result.textContent = "";
     status.textContent = "";
     puzzleSection.hidden = false;
+    submissionsSection.hidden = false;
 
-    await showSubmissions();
+    await Promise.all([startClock(), showSubmissions()]);
 }
 
+async function startClock() {
+    try {
+        currentAttemptId = (await startAttempt(currentCrossword.id)).id;
+    } catch (error) {
+        status.textContent = `Kunne ikke starte tiden: ${error.message}`;
+    }
+}
+
+// Submissions and resource usage are fetched together, because the table also shows the players' time.
 async function showSubmissions() {
     try {
-        renderSubmissions(submissionList, await fetchSubmissions(currentCrossword.id));
+        const [submissions, apiCalls] = await Promise.all([
+            fetchSubmissions(currentCrossword.id),
+            fetchApiCalls(currentCrossword.id),
+        ]);
+        renderSubmissions(submissionList, submissions, currentUser.id, onShowSubmission);
+        renderResourceRows(resourceRows, apiCalls, submissions);
     } catch (error) {
         status.textContent = `Kunne ikke hente afleveringer: ${error.message}`;
     }
 }
 
-async function onNewCrossword() {
+// Puts a saved submission back in the grid with green and red cells, so the player can see what was right.
+async function onShowSubmission(submission) {
+    try {
+        const { submittedGrid, cellMarks } = await fetchSubmission(currentCrossword.id, submission.id);
+        fillGrid(grid, submittedGrid);
+        markGrid(grid, cellMarks);
+        const who = submission.llmModel ? MODEL_NAMES[submission.llmModel] : "Din aflevering";
+        result.textContent = `${who}: ${submission.percentCorrect} % rigtige. Rediger gitteret og tjek igen, hvis du vil.`;
+    } catch (error) {
+        result.textContent = `Kunne ikke vise afleveringen: ${error.message}`;
+    }
+}
+
+async function onNewCrossword(event) {
+    event.preventDefault();
+    const data = new FormData(createForm);
+    const crosswordRequest = {
+        gridSize: Number(data.get("gridSize")),
+        playerPrompt: data.get("playerPrompt"),
+    };
     // Disabled while waiting, so a double click cannot use two fills of the quota.
     newButton.disabled = true;
-    status.textContent = "Henter nyt krydsord. Det kan tage op til 20 sekunder.";
+    createStatus.textContent = "Laver krydsord. Det kan tage op til et halvt minut.";
     try {
-        const crossword = await createCrossword();
+        const crossword = await createCrossword(crosswordRequest);
+        createForm.reset();
+        createStatus.textContent = "";
         await loadCrosswordList();
         await showCrossword(crossword);
     } catch (error) {
-        status.textContent = `Kunne ikke hente et nyt krydsord: ${error.message}`;
+        createStatus.textContent = `Kunne ikke lave krydsordet: ${error.message}`;
     } finally {
         newButton.disabled = false;
     }
@@ -88,7 +277,7 @@ async function onNewCrossword() {
 async function onSubmit() {
     const submission = {
         grid: readGrid(grid),
-        timeToSolveMs: Date.now() - startedAt,
+        attemptId: currentAttemptId,
     };
     try {
         const { submission: saved, cellMarks } = await postSubmission(currentCrossword.id, submission);
